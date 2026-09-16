@@ -5,7 +5,6 @@ export default async function EquipmentPage() {
     const equipments = await res.json();
 
     return <div>
-        <h1>Danh sách thiết bị</h1>
         <EquipmentList equipments={equipments} />
     </div>
 }
