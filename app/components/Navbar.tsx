@@ -9,18 +9,16 @@ export default function Navbar() {
     const router = useRouter();
     const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-    function handleAuthChange() {
-        const token = localStorage.getItem("authToken");
+    async function handleAuthChange() {
+        const res = await fetch("http://localhost:5009/api/Auth/me", {
+            credentials: "include"
+        });
 
-        setIsLoggedIn(!!token);
+        setIsLoggedIn(res.ok);
     }
 
     useEffect(() => {
-        const token = localStorage.getItem("authToken");
-
-        if (token) {
-            setIsLoggedIn(true);
-        }
+        handleAuthChange();
 
         window.addEventListener("authChanged", handleAuthChange);
 
@@ -30,21 +28,10 @@ export default function Navbar() {
     }, []);
 
     async function handleLogout() {
-        const refreshToken = localStorage.getItem("refreshToken");
-
         await fetch("http://localhost:5009/api/Auth/logout", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                refreshToken: refreshToken
-            })
+            credentials: "include"
         });
-
-        localStorage.removeItem("authToken");
-        localStorage.removeItem("refreshToken");
-        localStorage.removeItem("userRole");
 
         window.dispatchEvent(new Event("authChanged"));
 

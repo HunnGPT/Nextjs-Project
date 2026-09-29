@@ -15,19 +15,18 @@ export default function LoginPage() {
             headers: {
                 "Content-Type": "application/json"
             },
+            credentials: "include",
             body: JSON.stringify({
                 username: username,
                 password: password
             })
         });
 
-        const data = await res.json();
-
-        console.log(data);
-
-        localStorage.setItem("authToken", data.token);
-        localStorage.setItem("refreshToken", data.refreshToken);
-        localStorage.setItem("userRole", data.role);
+        if (!res.ok) {
+            const data = await res.json();
+            alert(data);
+            return;
+        }
 
         window.dispatchEvent(new Event("authChanged"));
 

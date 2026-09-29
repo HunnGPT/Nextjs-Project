@@ -12,14 +12,27 @@ export default function AdminGuard({
     const [checking, setChecking] = useState(true);
 
     useEffect(() => {
-        const role = localStorage.getItem("userRole");
+        async function checkAdmin() {
+            const res = await fetch("http://localhost:5009/api/Auth/me", {
+                credentials: "include"
+            });
 
-        if (role !== "Admin") {
-            router.replace("/equipment");
-            return;
+            if (!res.ok) {
+                router.replace("/login");
+                return;
+            }
+
+            const data = await res.json();
+
+            if (data.role !== "Admin") {
+                router.replace("/equipment");
+                return;
+            }
+
+            setChecking(false);
         }
 
-        setChecking(false);
+        checkAdmin();
     }, [router]);
 
     if (checking) {

@@ -29,12 +29,22 @@ export default function EquipmentList() {
     const [search, setSearch] = useState("");
 
     useEffect(() => {
-        setRole(localStorage.getItem("userRole"));
-
         async function fetchEquipments() {
-            const res = await apiFetch("http://localhost:5009/api/equipments");
+            const meRes = await apiFetch("http://localhost:5009/api/Auth/me");
 
-            const data = await res.json();
+            if (!meRes.ok) {
+                return;
+            }
+
+            const meData = await meRes.json();
+
+            setRole(meData.role);
+
+            const equipmentRes = await apiFetch(
+                "http://localhost:5009/api/equipments"
+            );
+
+            const data = await equipmentRes.json();
 
             setEquipmentList(data);
             setFilteredEquipments(data);

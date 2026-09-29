@@ -1,33 +1,37 @@
+let refreshPromise: Promise<boolean> | null = null;
+
 export async function apiFetch(
     url: string,
     options: RequestInit = {}
 ) {
-    const token = localStorage.getItem("authToken");
-
     const res = await fetch(url, {
         ...options,
+        credentials: "include",
         headers: {
             ...options.headers,
-            Authorization: `Bearer ${token}`
         }
     });
 
     console.log("API status:", res.status);
 
     if (res.status === 401) {
-        const refreshed = await refreshAccessToken();
+        if (!refreshPromise) {
+            refreshPromise = refreshAccessToken().finally(() => {
+                refreshPromise = null;
+            });
+        }
+
+        const refreshed = await refreshPromise;
 
         if (!refreshed) {
             return res;
         }
 
-        const newToken = localStorage.getItem("authToken");
-
         const retryRes = await fetch(url, {
             ...options,
+            credentials: "include",
             headers: {
                 ...options.headers,
-                Authorization: `Bearer ${newToken}`
             }
         });
 
@@ -40,16 +44,9 @@ export async function apiFetch(
 async function refreshAccessToken(): Promise<boolean> {
     console.log("Đang refresh token...");
 
-    const refreshToken = localStorage.getItem("refreshToken");
-
     const res = await fetch("http://localhost:5009/api/Auth/refresh", {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            refreshToken: refreshToken
-        })
+        credentials: "include",
     });
 
     console.log("Refresh status:", res.status);
@@ -57,12 +54,6 @@ async function refreshAccessToken(): Promise<boolean> {
     if (!res.ok) {
         return false;
     }
-
-    const data = await res.json();
-
-    console.log("Refresh thành công:", data);
-
-    localStorage.setItem("authToken", data.token);
 
     return true;
 }

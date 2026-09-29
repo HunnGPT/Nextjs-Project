@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect } from "react";
+import { apiFetch } from "../../services/api";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export default function AuthGuard({
     children
@@ -11,11 +12,17 @@ export default function AuthGuard({
     const router = useRouter();
 
     useEffect(() => {
-        const token = localStorage.getItem("authToken");
+        async function checkAuth() {
+            const res = await apiFetch("http://localhost:5009/api/Auth/me", {
+                credentials: "include"
+            });
 
-        if (!token) {
-            router.push("/login");
+            if (!res.ok) {
+                router.push("/login");
+            }
         }
+
+        checkAuth();
     }, [router]);
 
     return <>{children}</>;
