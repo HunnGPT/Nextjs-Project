@@ -1,3 +1,7 @@
 export default function DashboardPage() {
-    return <h1>Dashboard</h1>;
+    return (
+        <div>
+            <h1>Trang chủ</h1>
+        </div>
+    );
 }

@@ -1,10 +1,10 @@
 import EquipmentList from "./EquipmentList";
+import AuthGuard from "./AuthGuard";
 
-export default async function EquipmentPage() {
-    const res = await fetch('http://localhost:3000/api/equipment');
-    const equipments = await res.json();
-
-    return <div>
-        <EquipmentList equipments={equipments} />
-    </div>
+export default function EquipmentPage() {
+    return (
+        <AuthGuard>
+            <EquipmentList />
+        </AuthGuard>
+    );
 }

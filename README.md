@@ -1,36 +1,80 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Equipment Management
 
-## Getting Started
+Ứng dụng quản lý thiết bị gồm Frontend Next.js và Backend ASP.NET Core Web API.
 
-First, run the development server:
+## Công nghệ sử dụng
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
+### Frontend
+
+- Next.js
+- TypeScript
+- Material UI
+- MUI DataGrid
+
+### Backend
+
+- ASP.NET Core Web API
+- C#
+- Entity Framework Core
+- PostgreSQL
+
+## Chức năng
+
+- Xem danh sách thiết bị
+- Tìm kiếm thiết bị theo tên
+- Xem chi tiết thiết bị
+- Thêm thiết bị
+- Sửa thiết bị
+- Xóa thiết bị
+- Xác nhận trước khi xóa
+- Validation dữ liệu
+- Loading state
+- Empty state
+- Error state
+
+## Cấu trúc Frontend
+
+app/
+├── equipment/
+│   ├── [id]/
+│   │   ├── page.tsx
+│   │   └── edit/
+│   ├── create/
+│   ├── EquipmentList.tsx
+│   ├── page.tsx
+│   ├── loading.tsx
+│   └── error.tsx
+
+## Cấu trúc Backend
+
+Equipment.Api/
+├── Controllers/
+├── Services/
+├── Models/
+├── DTOs/
+├── Data/
+└── Program.cs
+
+## Chạy Backend
+
+cd Equipment.Api
+dotnet run
+
+## Chạy Frontend
+
+cd my-app
 pnpm dev
-# or
-bun dev
-```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Database
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Project sử dụng PostgreSQL và Entity Framework Core.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## API
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| Method | Endpoint               | Chức năng              |
+| ------ | ---------------------- | ---------------------- |
+| GET    | `/api/equipments`      | Lấy danh sách thiết bị |
+| GET    | `/api/equipments/{id}` | Lấy thiết bị theo ID   |
+| POST   | `/api/equipments`      | Thêm thiết bị          |
+| PUT    | `/api/equipments/{id}` | Cập nhật thiết bị      |
+| DELETE | `/api/equipments/{id}` | Xóa thiết bị           |

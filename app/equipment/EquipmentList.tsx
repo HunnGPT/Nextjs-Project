@@ -1,8 +1,10 @@
 'use client'
 
-import { useState } from "react";
-import Link from "next/link";
+import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import { apiFetch } from "../../services/api";
+import { useState, useEffect } from "react";
+import Link from "next/link";
 import {
     Dialog,
     DialogTitle,
@@ -17,16 +19,30 @@ type Equipment = {
     status: string;
 }
 
-type EquipmentListProp = {
-    equipments: Equipment[];
-}
-
-export default function EquipmentList({ equipments }: EquipmentListProp) {
-    const [equipmentList, setEquipmentList] = useState(equipments);
-    const [filteredEquipments, setFilteredEquipments] = useState(equipments);
-    const [search, setSearch] = useState("");
-    const [openDelete, setOpenDelete] = useState(false);
+export default function EquipmentList() {
+    const [filteredEquipments, setFilteredEquipments] = useState<Equipment[]>([]);
+    const [equipmentList, setEquipmentList] = useState<Equipment[]>([]);
     const [selectedId, setSelectedId] = useState<number | null>(null);
+    const [role, setRole] = useState<string | null>(null);
+    const [openDelete, setOpenDelete] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [search, setSearch] = useState("");
+
+    useEffect(() => {
+        setRole(localStorage.getItem("userRole"));
+
+        async function fetchEquipments() {
+            const res = await apiFetch("http://localhost:5009/api/equipments");
+
+            const data = await res.json();
+
+            setEquipmentList(data);
+            setFilteredEquipments(data);
+            setLoading(false);
+        }
+
+        fetchEquipments();
+    }, []);
 
     function handleSearch() {
         if (search.trim() === "") {
@@ -42,9 +58,12 @@ export default function EquipmentList({ equipments }: EquipmentListProp) {
     }
 
     async function handleDelete(id: number) {
-        const res = await fetch(`/api/equipment/${id}`, {
-            method: "DELETE",
-        });
+        const res = await apiFetch(
+            `http://localhost:5009/api/equipments/${id}`,
+            {
+                method: "DELETE"
+            }
+        );
 
         if (res.ok) {
             setEquipmentList(prev =>
@@ -77,17 +96,25 @@ export default function EquipmentList({ equipments }: EquipmentListProp) {
         setSelectedId(null);
     }
 
+    const rows = filteredEquipments.map((equipment, index) => ({
+        ...equipment,
+        stt: index + 1
+    }));
 
     const columns: GridColDef[] = [
         {
-            field: "id",
-            headerName: "ID",
-            width: 100
+            field: "stt",
+            headerName: "STT",
+            width: 100,
+            headerAlign: "center",
+            align: "center",
         },
         {
             field: "name",
             headerName: "Tên thiết bị",
-            width: 200,
+            width: 300,
+            headerAlign: "center",
+            align: "center",
             renderCell: (params) => (
                 <Link href={`/equipment/${params.row.id}`}>
                     {params.row.name}
@@ -97,32 +124,68 @@ export default function EquipmentList({ equipments }: EquipmentListProp) {
         {
             field: "status",
             headerName: "Trạng thái",
-            width: 200
-        },
-        {
-            field: "action",
-            headerName: "Thao tác",
-            width: 150,
-            sortable: false,
-            renderCell: (params) => (
-                <button
-                    onClick={() => handleOpenDelete(params.row.id)}
-                    style={{
-                        backgroundColor: "grey",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "5px",
-                        padding: "0 12px",
-                        cursor: "pointer",
-                        height: "35px",
-                        lineHeight: "35px"
-                    }}
-                >
-                    Xóa
-                </button>
-            )
+            width: 250,
+            headerAlign: "center",
+            align: "center"
         }
     ];
+
+    if (role === "Admin") {
+        columns.push({
+            field: "action",
+            headerName: "Thao tác",
+            width: 190,
+            headerAlign: "center",
+            align: "center",
+            sortable: false,
+            renderCell: (params) => (
+                <div
+                    style={{
+                        display: "flex",
+                        gap: "50px",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        height: "100%"
+                    }}
+                >
+                    <Link href={`/equipment/${params.row.id}/edit`}>
+                        <button
+                            style={{
+                                backgroundColor: "#1976d2",
+                                color: "white",
+                                border: "none",
+                                borderRadius: "5px",
+                                padding: "0 12px",
+                                cursor: "pointer",
+                                height: "35px",
+                                lineHeight: "35px"
+                            }}
+                        >
+                            Sửa
+                        </button>
+                    </Link>
+
+                    <button
+                        onClick={() => handleOpenDelete(params.row.id)}
+                        style={{
+                            backgroundColor: "red",
+                            color: "white",
+                            border: "none",
+                            borderRadius: "5px",
+                            width: "40px",
+                            height: "35px",
+                            cursor: "pointer",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                        }}
+                    >
+                        <DeleteForeverIcon />
+                    </button>
+                </div>
+            )
+        });
+    }
 
 
     const gridHeight = Math.max(
@@ -134,7 +197,7 @@ export default function EquipmentList({ equipments }: EquipmentListProp) {
     return (
         <div style={{ width: "100%" }}>
 
-            <h1 style={{ marginBottom: "15px" }}>
+            <h1 style={{ fontSize: "48px", fontWeight: "bold" }}>
                 Danh sách thiết bị
             </h1>
 
@@ -173,6 +236,23 @@ export default function EquipmentList({ equipments }: EquipmentListProp) {
                 >
                     Tìm kiếm
                 </button>
+
+                {role === "Admin" && (
+                    <Link href="/equipment/create">
+                        <button
+                            style={{
+                                backgroundColor: "#1976d2",
+                                color: "white",
+                                border: "none",
+                                borderRadius: "5px",
+                                padding: "8px 15px",
+                                cursor: "pointer"
+                            }}
+                        >
+                            + Thêm thiết bị
+                        </button>
+                    </Link>
+                )}
             </div>
 
             <div
@@ -181,12 +261,20 @@ export default function EquipmentList({ equipments }: EquipmentListProp) {
                     height: gridHeight
                 }}
             >
-                <DataGrid
-                    rows={filteredEquipments}
-                    columns={columns}
-                    pageSizeOptions={[5, 10, 25]}
-                    disableRowSelectionOnClick
-                />
+                {loading ? (
+                    <p>Đang tải thiết bị...</p>
+                ) : equipmentList.length == 0 ? (
+                    <p>Chưa có thiết bị nào.</p>
+                ) : filteredEquipments.length == 0 ? (
+                    <p>Không tìm thấy thiết bị phù hợp.</p>
+                ) : (
+                    <DataGrid
+                        rows={rows}
+                        columns={columns}
+                        pageSizeOptions={[5, 10, 25, 100]}
+                        disableRowSelectionOnClick
+                    />
+                )}
             </div>
 
             <Dialog

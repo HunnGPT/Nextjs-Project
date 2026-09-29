@@ -76,3 +76,55 @@ body {
   flex: 1;
   padding: 30px;
 }
+
+/* button */
+.auth-nav {
+  position: fixed;
+  top: 20px;
+  right: 25px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 1000;
+}
+
+.auth-button {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 15px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.login-button {
+  color: #333;
+  background: #f1f1f1;
+}
+
+.login-button:hover {
+  background: #e2e2e2;
+}
+
+.register-button {
+  color: white;
+  background: #2563eb;
+}
+
+.register-button:hover {
+  background: #1d4ed8;
+}
+
+.logout-button {
+  color: white;
+  background: #ef4444;
+}
+
+.logout-button:hover {
+  background: #dc2626;
+}
