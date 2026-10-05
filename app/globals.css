@@ -128,3 +128,74 @@ body {
 .logout-button:hover {
   background: #dc2626;
 }
+
+/* forbidden-page */
+.forbidden-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f7fb;
+  padding: 20px;
+}
+
+.forbidden-card {
+  width: 100%;
+  max-width: 500px;
+  text-align: center;
+  background: white;
+  padding: 50px 40px;
+  border-radius: 18px;
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.08);
+}
+
+.forbidden-icon {
+  width: 70px;
+  height: 70px;
+  margin: 0 auto 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff1f1;
+  border-radius: 50%;
+  font-size: 30px;
+}
+
+.forbidden-code {
+  font-size: 72px;
+  font-weight: 800;
+  line-height: 1;
+  color: #dc2626;
+  margin-bottom: 15px;
+}
+
+.forbidden-card h1 {
+  margin: 0 0 12px;
+  font-size: 26px;
+  color: #1f2937;
+}
+
+.forbidden-card p {
+  margin: 0;
+  color: #6b7280;
+  line-height: 1.7;
+  font-size: 15px;
+}
+
+.back-button {
+  display: inline-block;
+  margin-top: 28px;
+  padding: 11px 22px;
+  border-radius: 9px;
+  background: #2563eb;
+  color: white;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+  transition: 0.2s;
+}
+
+.back-button:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+}

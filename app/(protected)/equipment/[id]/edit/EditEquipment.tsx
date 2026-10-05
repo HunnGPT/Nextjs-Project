@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { apiFetch } from "../../../../services/api";
+import { apiFetch } from "../../../../../services/api";
 
 type Equipment = {
     id: number;
@@ -29,7 +29,7 @@ export default function EditEquipment({ equipment }: { equipment: Equipment }) {
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
         const res = await apiFetch(
-            `http://localhost:5009/api/equipments/${equipment.id}`, {
+            `/api/equipments/${equipment.id}`, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json"

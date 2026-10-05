@@ -1,8 +1,8 @@
 'use client'
 
-import { apiFetch } from "../../../services/api";
+import { apiFetch, getApiError } from "../../../../services/api";
 import { useRouter } from 'next/navigation';
-import AdminGuard from "../AdminGuard";
+import RoleGuard from "../../../RoleGuard";
 import { useState } from 'react';
 
 export default function CreateEquipmentPage() {
@@ -28,7 +28,7 @@ export default function CreateEquipmentPage() {
             return;
         }
 
-        const res = await apiFetch('http://localhost:5009/api/equipments', {
+        const res = await apiFetch("/api/equipments", {
             method: "POST",
             headers: {
                 "Content-type": "application/json"
@@ -39,11 +39,15 @@ export default function CreateEquipmentPage() {
         if (res.ok) {
             alert("Thêm thiết bị thành công");
             router.push("/equipment");
+            return;
         }
+
+        const error = await getApiError(res);
+        alert(error);
     }
 
     return (
-        <AdminGuard>
+        <RoleGuard role="Admin">
             <div>
                 <form onSubmit={handleSubmit}>
                     <h1 style={{ fontSize: "48px", fontWeight: "bold", textAlign: "center", marginBottom: "20px" }}>Thêm thiết bị</h1>
@@ -91,6 +95,6 @@ export default function CreateEquipmentPage() {
                     </button>
                 </form>
             </div>
-        </AdminGuard>
+        </RoleGuard>
     );
 }

@@ -4,7 +4,9 @@ export async function apiFetch(
     url: string,
     options: RequestInit = {}
 ) {
-    const res = await fetch(url, {
+    const fullUrl = `${process.env.NEXT_PUBLIC_API_URL}${url}`;
+
+    const res = await fetch(fullUrl, {
         ...options,
         credentials: "include",
         headers: {
@@ -27,7 +29,7 @@ export async function apiFetch(
             return res;
         }
 
-        const retryRes = await fetch(url, {
+        const retryRes = await fetch(fullUrl, {
             ...options,
             credentials: "include",
             headers: {
@@ -41,10 +43,19 @@ export async function apiFetch(
     return res;
 }
 
-async function refreshAccessToken(): Promise<boolean> {
-    console.log("Đang refresh token...");
+export async function getApiError(res: Response): Promise<string> {
+    const data = await res.json();
+    if (data.errors) {
+        const messages = Object.values(data.errors).flat();
 
-    const res = await fetch("http://localhost:5009/api/Auth/refresh", {
+        return messages.join(", ");
+    }
+
+    return data.detail || data.title || "Đã xảy ra lỗi";
+}
+
+async function refreshAccessToken(): Promise<boolean> {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/Auth/refresh`, {
         method: "POST",
         credentials: "include",
     });

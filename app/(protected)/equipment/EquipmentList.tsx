@@ -2,7 +2,7 @@
 
 import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
-import { apiFetch } from "../../services/api";
+import { apiFetch } from "../../../services/api";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
@@ -30,7 +30,7 @@ export default function EquipmentList() {
 
     useEffect(() => {
         async function fetchEquipments() {
-            const meRes = await apiFetch("http://localhost:5009/api/Auth/me");
+            const meRes = await apiFetch("/api/Auth/me");
 
             if (!meRes.ok) {
                 return;
@@ -41,7 +41,7 @@ export default function EquipmentList() {
             setRole(meData.role);
 
             const equipmentRes = await apiFetch(
-                "http://localhost:5009/api/equipments"
+                "/api/equipments"
             );
 
             const data = await equipmentRes.json();
@@ -69,7 +69,7 @@ export default function EquipmentList() {
 
     async function handleDelete(id: number) {
         const res = await apiFetch(
-            `http://localhost:5009/api/equipments/${id}`,
+            `/api/equipments/${id}`,
             {
                 method: "DELETE"
             }

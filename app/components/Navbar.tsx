@@ -4,13 +4,15 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { KeyRound, UserPlus, LogOut } from "lucide-react";
+import { apiFetch } from "../../services/api";
+
 
 export default function Navbar() {
     const router = useRouter();
     const [isLoggedIn, setIsLoggedIn] = useState(false);
 
     async function handleAuthChange() {
-        const res = await fetch("http://localhost:5009/api/Auth/me", {
+        const res = await apiFetch("/api/Auth/me", {
             credentials: "include"
         });
 
@@ -28,7 +30,7 @@ export default function Navbar() {
     }, []);
 
     async function handleLogout() {
-        await fetch("http://localhost:5009/api/Auth/logout", {
+        await apiFetch("/api/Auth/logout", {
             method: "POST",
             credentials: "include"
         });

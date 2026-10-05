@@ -3,38 +3,51 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import styles from "./login.module.css";
+import { getApiError, apiFetch } from "../../services/api";
 
 export default function LoginPage() {
     const router = useRouter();
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
+    const [loading, setLoading] = useState(false);
 
     async function handleLogin() {
-        const res = await fetch("http://localhost:5009/api/Auth/login", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            credentials: "include",
-            body: JSON.stringify({
-                username: username,
-                password: password
-            })
-        });
+        try {
+            setLoading(true);
+            const res = await apiFetch("/api/Auth/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                credentials: "include",
+                body: JSON.stringify({
+                    username: username,
+                    password: password
+                })
+            });
 
-        if (!res.ok) {
-            const data = await res.json();
-            alert(data);
-            return;
+            if (!res.ok) {
+                const error = await getApiError(res);
+                alert(error);
+                return;
+            }
+
+            window.dispatchEvent(new Event("authChanged"));
+
+            router.push("/dashboard");
+        } finally {
+            setLoading(false);
         }
-
-        window.dispatchEvent(new Event("authChanged"));
-
-        router.push("/dashboard");
     }
 
     return (
-        <div className={styles.page}>
+        <form
+            className={styles.page}
+            onSubmit={(e) => {
+                e.preventDefault();
+                handleLogin();
+            }}
+        >
             <div className={styles.loginBox}>
 
                 <div className={styles.header}>
@@ -80,11 +93,12 @@ export default function LoginPage() {
                     <button
                         onClick={handleLogin}
                         className={styles.button}
+                        disabled={loading}
                     >
-                        Đăng nhập
+                        {loading ? "Đang đăng nhập..." : "Đăng nhập"}
                     </button>
                 </div>
             </div>
-        </div>
+        </form>
     );
 }

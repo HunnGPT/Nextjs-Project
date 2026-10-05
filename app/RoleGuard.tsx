@@ -2,38 +2,41 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { apiFetch } from "@/services/api";
 
-export default function AdminGuard({
-    children
+export default function RoleGuard({
+    children,
+    role
 }: {
-    children: React.ReactNode
+    children: React.ReactNode;
+    role: string;
 }) {
     const router = useRouter();
     const [checking, setChecking] = useState(true);
 
     useEffect(() => {
-        async function checkAdmin() {
-            const res = await fetch("http://localhost:5009/api/Auth/me", {
+        async function checkRole() {
+            const res = await apiFetch("/api/Auth/me", {
                 credentials: "include"
             });
 
-            if (!res.ok) {
+            if (res.status === 401) {
                 router.replace("/login");
                 return;
             }
 
             const data = await res.json();
 
-            if (data.role !== "Admin") {
-                router.replace("/equipment");
+            if (data.role !== role) {
+                router.replace("/403");
                 return;
             }
 
             setChecking(false);
         }
 
-        checkAdmin();
-    }, [router]);
+        checkRole();
+    }, [router, role]);
 
     if (checking) {
         return null;
