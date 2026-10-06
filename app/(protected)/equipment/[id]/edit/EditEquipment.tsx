@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { apiFetch } from "../../../../../services/api";
+import styles from "./EditEquipment.module.css";
 
 type Equipment = {
     id: number;
@@ -13,13 +14,19 @@ type Equipment = {
 
 export default function EditEquipment({ equipment }: { equipment: Equipment }) {
     const router = useRouter();
+
     const [form, setForm] = useState({
         code: equipment.code,
         name: equipment.name,
         status: equipment.status
     });
 
-    function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [showSuccess, setShowSuccess] = useState(false);
+
+    function handleChange(
+        e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    ) {
         setForm({
             ...form,
             [e.target.name]: e.target.value
@@ -28,64 +35,153 @@ export default function EditEquipment({ equipment }: { equipment: Equipment }) {
 
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
+
+        setIsSubmitting(true);
+
         const res = await apiFetch(
-            `/api/equipments/${equipment.id}`, {
-            method: "PUT",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(form)
-        }
+            `/api/equipments/${equipment.id}`,
+            {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(form)
+            }
         );
 
         if (res.ok) {
-            alert("Cập nhật thiết bị thành công");
-            router.push(`/equipment`);
+            setShowSuccess(true);
+
+            setTimeout(() => {
+                router.push("/equipment");
+            }, 1000);
+
+            return;
         }
+
+        setIsSubmitting(false);
+        alert("Cập nhật thiết bị thất bại");
     }
 
     return (
-        <form onSubmit={handleSubmit}>
-            <h1 style={{ fontSize: "48px", fontWeight: "bold", textAlign: "center", marginBottom: "20px" }}>Chỉnh sửa thiết bị</h1>
+        <>
+            {showSuccess && (
+                <div className={styles.successToast}>
+                    <div className={styles.successIcon}>
+                        <i className="fa-solid fa-check"></i>
+                    </div>
 
-            <label style={{ fontSize: "24px", marginLeft: "396px" }}>Mã thiết bị</label>
-            <input
-                name="code"
-                value={form.code}
-                style={{ marginLeft: "50px", border: "1px solid #ccc", padding: "2px", width: "300px" }}
-                onChange={handleChange}
-            /> <br />
+                    <span>
+                        Cập nhật thiết bị thành công
+                    </span>
+                </div>
+            )}
 
-            <label style={{ fontSize: "24px", marginLeft: "388px" }}>Tên thiết bị</label>
-            <input
-                name="name"
-                value={form.name}
-                style={{ marginLeft: "50px", border: "1px solid #ccc", padding: "2px", width: "300px" }}
-                onChange={handleChange}
-            /> <br />
+            <div className={styles.page}>
+                <div className={styles.container}>
 
-            <label style={{ fontSize: "24px", marginLeft: "400px" }}>Trạng thái</label>
-            <input
-                name="status"
-                value={form.status}
-                style={{ marginLeft: "50px", border: "1px solid #ccc", padding: "2px", width: "300px" }}
-                onChange={handleChange}
-            /> <br />
+                    <div className={styles.header}>
+                        <h1 className={styles.title}>
+                            Chỉnh sửa thiết bị
+                        </h1>
 
-            <button type="submit"
-                style={{
-                    fontSize: "20px",
-                    marginLeft: "798px",
-                    marginTop: "10px",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "5px",
-                    backgroundColor: "#1976d2",
-                    padding: "6px 12px",
-                    cursor: "pointer"
-                }}>
-                Lưu
-            </button>
-        </form >
+                        <p className={styles.subtitle}>
+                            Cập nhật thông tin thiết bị trong hệ thống
+                        </p>
+                    </div>
+
+                    <div className={styles.divider}></div>
+
+                    <form onSubmit={handleSubmit}>
+
+                        <div className={styles.formGroup}>
+                            <label className={styles.label}>
+                                Mã thiết bị
+                                <span className={styles.required}>*</span>
+                            </label>
+
+                            <input
+                                type="text"
+                                name="code"
+                                value={form.code}
+                                onChange={handleChange}
+                                placeholder="Nhập mã thiết bị"
+                                className={styles.input}
+                                disabled={isSubmitting || showSuccess}
+                            />
+                        </div>
+
+                        <div className={styles.formGroup}>
+                            <label className={styles.label}>
+                                Tên thiết bị
+                                <span className={styles.required}>*</span>
+                            </label>
+
+                            <input
+                                type="text"
+                                name="name"
+                                value={form.name}
+                                onChange={handleChange}
+                                placeholder="Nhập tên thiết bị"
+                                className={styles.input}
+                                disabled={isSubmitting || showSuccess}
+                            />
+                        </div>
+
+                        <div className={styles.formGroup}>
+                            <label className={styles.label}>
+                                Trạng thái
+                                <span className={styles.required}>*</span>
+                            </label>
+
+                            <select
+                                name="status"
+                                value={form.status}
+                                onChange={handleChange}
+                                className={styles.input}
+                                disabled={isSubmitting || showSuccess}
+                            >
+                                <option value="Đang sử dụng">
+                                    Đang sử dụng
+                                </option>
+
+                                <option value="Đang bảo trì">
+                                    Đang bảo trì
+                                </option>
+
+                                <option value="Không sử dụng">
+                                    Không sử dụng
+                                </option>
+                            </select>
+                        </div>
+
+                        <div className={styles.actions}>
+                            <button
+                                type="button"
+                                onClick={() => router.push("/equipment")}
+                                className={styles.cancelButton}
+                                disabled={isSubmitting || showSuccess}
+                            >
+                                Hủy
+                            </button>
+
+                            <button
+                                type="submit"
+                                disabled={isSubmitting || showSuccess}
+                                className={`${styles.saveButton} ${isSubmitting || showSuccess
+                                        ? styles.disabledButton
+                                        : ""
+                                    }`}
+                            >
+                                {isSubmitting || showSuccess
+                                    ? "Đang lưu..."
+                                    : "Lưu thay đổi"}
+                            </button>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+        </>
     );
 }

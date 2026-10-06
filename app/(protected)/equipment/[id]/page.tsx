@@ -1,3 +1,5 @@
+import { apiFetch } from "../../../../services/api";
+
 export default async function EquipmentDetailPage({
     params,
 }: {
@@ -5,7 +7,15 @@ export default async function EquipmentDetailPage({
 }) {
     const { id } = await params;
 
-    const res = await fetch(`http://localhost:5009/api/equipments/${id}`);
+    const res = await apiFetch(`/api/equipments/${id}`);
+
+    console.log("ID:", id);
+    console.log("Status:", res.status);
+
+    if (!res.ok) {
+        return <div>Không tìm thấy thiết bị</div>;
+    }
+
     const equipment = await res.json();
 
     return (

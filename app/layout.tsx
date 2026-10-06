@@ -11,6 +11,13 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="vi">
+      <head>
+        <link
+          rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.1.0/css/all.min.css"
+        />
+      </head>
+
       <body>
         <div className="layout">
           <nav className="sidebar">

@@ -91,7 +91,7 @@ export default function LoginPage() {
                     </div>
 
                     <button
-                        onClick={handleLogin}
+                        type="submit"
                         className={styles.button}
                         disabled={loading}
                     >

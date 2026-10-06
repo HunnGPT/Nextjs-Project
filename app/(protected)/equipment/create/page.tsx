@@ -1,44 +1,56 @@
 'use client'
 
+import { useState } from "react";
 import { apiFetch, getApiError } from "../../../../services/api";
-import { useRouter } from 'next/navigation';
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { useRouter } from "next/navigation";
 import RoleGuard from "../../../RoleGuard";
-import { useState } from 'react';
+import styles from "./CreateEquipment.module.css";
+
+const equipmentSchema = z.object({
+    code: z.string()
+        .min(1, "Mã thiết bị không được để trống")
+        .max(50, "Mã thiết bị tối đa 50 ký tự"),
+
+    name: z.string()
+        .min(1, "Tên thiết bị không được để trống")
+        .max(200, "Tên thiết bị tối đa 200 ký tự"),
+
+    status: z.string()
+        .min(1, "Trạng thái không được để trống")
+});
+
+type EquipmentForm = z.infer<typeof equipmentSchema>;
 
 export default function CreateEquipmentPage() {
     const router = useRouter();
-    const [equipment, setEquipment] = useState({
-        code: "",
-        name: "",
-        status: ""
-    })
+    const [showSuccess, setShowSuccess] = useState(false);
+    const {
+        register,
+        handleSubmit,
+        formState: { errors, isSubmitting }
+    } = useForm<EquipmentForm>({
+        resolver: zodResolver(equipmentSchema)
+    });
 
-    function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-        setEquipment({
-            ...equipment,
-            [e.target.name]: e.target.value
-        })
-    }
-
-    async function handleSubmit(e: React.FormEvent) {
-        e.preventDefault();
-
-        if (!equipment.code || !equipment.name || !equipment.status) {
-            alert("Vui lòng nhập đầy đủ thông tin");
-            return;
-        }
-
+    async function onSubmit(data: EquipmentForm) {
         const res = await apiFetch("/api/equipments", {
             method: "POST",
             headers: {
                 "Content-type": "application/json"
             },
-            body: JSON.stringify(equipment)
-        })
+            body: JSON.stringify(data)
+        });
 
         if (res.ok) {
-            alert("Thêm thiết bị thành công");
-            router.push("/equipment");
+            setShowSuccess(true);
+
+            setTimeout(() => {
+                router.push("/equipment");
+            }, 1000);
+
             return;
         }
 
@@ -48,52 +60,130 @@ export default function CreateEquipmentPage() {
 
     return (
         <RoleGuard role="Admin">
-            <div>
-                <form onSubmit={handleSubmit}>
-                    <h1 style={{ fontSize: "48px", fontWeight: "bold", textAlign: "center", marginBottom: "20px" }}>Thêm thiết bị</h1>
-                    <label style={{ fontSize: "24px", marginLeft: "400px" }}>Mã thiết bị</label>
-                    <input
-                        type="text"
-                        name="code"
-                        value={equipment.code}
-                        onChange={handleChange}
-                        style={{ marginLeft: "50px", border: "1px solid #ccc", padding: "2px", width: "300px" }}
-                    /> <br />
+            {showSuccess && (
+                <div className={styles.successToast}>
+                    <div className={styles.successIcon}>
+                        <i className="fa-solid fa-check"></i>
+                    </div>
 
-                    <label style={{ fontSize: "24px", marginLeft: "400px" }}>Tên thiết bị</label>
-                    <input
-                        type="text"
-                        name="name"
-                        value={equipment.name}
-                        onChange={handleChange}
-                        style={{ marginLeft: "42px", border: "1px solid #ccc", padding: "2px", width: "300px" }}
-                    /> <br />
+                    <span>
+                        Thêm thiết bị thành công
+                    </span>
+                </div>
+            )}
 
-                    <label style={{ fontSize: "24px", marginLeft: "400px" }}>Trạng thái</label>
-                    <input
-                        type="text"
-                        name="status"
-                        value={equipment.status}
-                        onChange={handleChange}
-                        style={{ marginLeft: "54px", border: "1px solid #ccc", padding: "2px", width: "300px" }}
-                    /> <br />
+            <div className={styles.page}>
+                <div className={styles.container}>
 
-                    <button
-                        type="submit"
-                        style={{
-                            fontSize: "20px",
-                            marginLeft: "800px",
-                            marginTop: "10px",
-                            color: "white",
-                            border: "none",
-                            borderRadius: "5px",
-                            backgroundColor: "#1976d2",
-                            padding: "6px 12px",
-                            cursor: "pointer"
-                        }}>
-                        Lưu
-                    </button>
-                </form>
+                    <div className={styles.header}>
+                        <h1 className={styles.title}>
+                            Thêm thiết bị
+                        </h1>
+
+                        <p className={styles.subtitle}>
+                            Nhập thông tin để thêm thiết bị mới vào hệ thống
+                        </p>
+                    </div>
+
+                    <div className={styles.divider}></div>
+
+                    <form onSubmit={handleSubmit(onSubmit)}>
+
+                        <div className={styles.formGroup}>
+                            <label className={styles.label}>
+                                Mã thiết bị
+                                <span className={styles.required}>*</span>
+                            </label>
+
+                            <input
+                                type="text"
+                                placeholder="Nhập mã thiết bị"
+                                {...register("code")}
+                                className={`${styles.input} ${errors.code ? styles.inputError : ""} `}
+                            />
+
+                            {errors.code && (
+                                <p className={styles.error}>
+                                    {errors.code.message}
+                                </p>
+                            )}
+                        </div>
+
+                        <div className={styles.formGroup}>
+                            <label className={styles.label}>
+                                Tên thiết bị
+                                <span className={styles.required}>*</span>
+                            </label>
+
+                            <input
+                                type="text"
+                                placeholder="Nhập tên thiết bị"
+                                {...register("name")}
+                                className={`${styles.input} ${errors.name ? styles.inputError : ""} `}
+                            />
+
+                            {errors.name && (
+                                <p className={styles.error}>
+                                    {errors.name.message}
+                                </p>
+                            )}
+                        </div>
+
+                        <div className={styles.formGroup}>
+                            <label className={styles.label}>
+                                Trạng thái
+                                <span className={styles.required}>*</span>
+                            </label>
+
+                            <select
+                                {...register("status")}
+                                defaultValue=""
+                                className={`${styles.input} ${errors.status ? styles.inputError : ""} `}
+                            >
+                                <option value="" disabled>
+                                    Chọn trạng thái
+                                </option>
+
+                                <option value="Đang sử dụng">
+                                    Đang sử dụng
+                                </option>
+
+                                <option value="Đang bảo trì">
+                                    Đang bảo trì
+                                </option>
+
+                                <option value="Không sử dụng">
+                                    Không sử dụng
+                                </option>
+                            </select>
+
+                            {errors.status && (
+                                <p className={styles.error}>
+                                    {errors.status.message}
+                                </p>
+                            )}
+                        </div>
+
+                        <div className={styles.actions}>
+                            <button
+                                type="button"
+                                onClick={() => router.push("/equipment")}
+                                className={styles.cancelButton}
+                            >
+                                Hủy
+                            </button>
+
+                            <button
+                                type="submit"
+                                disabled={isSubmitting || showSuccess}
+                                className={`${styles.saveButton} ${isSubmitting ? styles.disabledButton : ""} `}
+                            >
+                                {isSubmitting || showSuccess ? "Đang lưu..." : "Lưu thiết bị"}
+                            </button>
+                        </div>
+
+                    </form>
+                </div>
             </div>
         </RoleGuard>
     );

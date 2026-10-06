@@ -78,3 +78,12 @@ Project sử dụng PostgreSQL và Entity Framework Core.
 | POST   | `/api/equipments`      | Thêm thiết bị          |
 | PUT    | `/api/equipments/{id}` | Cập nhật thiết bị      |
 | DELETE | `/api/equipments/{id}` | Xóa thiết bị           |
+
+## Seed Admin
+
+Khi ứng dụng khởi động, hệ thống sẽ tự động seed tài khoản Admin nếu username `admin` chưa tồn tại.
+
+Trước khi chạy API, cấu hình password bằng User Secrets:
+
+```bash
+dotnet user-secrets set "SeedAdmin:Password" "your-password"

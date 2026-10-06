@@ -1,4 +1,4 @@
-import EquipmentList from "./EquipmentList";
+import EquipmentList from "./EquipmentList/EquipmentList";
 import AuthGuard from "../../AuthGuard";
 
 export default function EquipmentPage() {

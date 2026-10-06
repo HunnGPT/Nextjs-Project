@@ -1,5 +1,6 @@
 import EditEquipment from "./EditEquipment";
 import { cookies } from "next/headers";
+import { apiFetch } from "../../../../../services/api";
 
 export default async function EditEquipmentPage({
     params,
@@ -10,7 +11,7 @@ export default async function EditEquipmentPage({
 
     const cookieStore = await cookies();
 
-    const res = await fetch(`http://localhost:5009/api/equipments/${id}`, {
+    const res = await apiFetch(`/api/equipments/${id}`, {
         headers: {
             Cookie: cookieStore.toString()
         }
