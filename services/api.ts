@@ -1,4 +1,4 @@
-let refreshPromise: Promise<boolean> | null = null;
+let refreshPromise: Promise<ApiErrorResponse | null> | null = null;
 
 export async function apiFetch(
     url: string,
@@ -23,9 +23,9 @@ export async function apiFetch(
             });
         }
 
-        const refreshed = await refreshPromise;
+        const refreshError = await refreshPromise;
 
-        if (!refreshed) {
+        if (refreshError) {
             return res;
         }
 
@@ -43,18 +43,32 @@ export async function apiFetch(
     return res;
 }
 
-export async function getApiError(res: Response): Promise<string> {
-    const data = await res.json();
-    if (data.errors) {
-        const messages = Object.values(data.errors).flat();
+export type ApiErrorResponse = {
+    code: string;
+    message: string;
+    traceId: string;
+    timestamp: string;
+    errors?: Record<string, string[]>;
+};
 
-        return messages.join(", ");
+export async function getApiError(
+    res: Response
+): Promise<ApiErrorResponse> {
+    const contentType = res.headers.get("content-type") ?? "";
+
+    if (contentType.includes("application/json")) {
+        return await res.json() as ApiErrorResponse;
     }
 
-    return data.detail || data.title || "Đã xảy ra lỗi";
+    return {
+        code: "UNEXPECTED_ERROR",
+        message: (await res.text()) || "Đã xảy ra lỗi",
+        traceId: "",
+        timestamp: new Date().toISOString()
+    };
 }
 
-async function refreshAccessToken(): Promise<boolean> {
+async function refreshAccessToken(): Promise<ApiErrorResponse | null> {
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/Auth/refresh`, {
         method: "POST",
         credentials: "include",
@@ -63,8 +77,9 @@ async function refreshAccessToken(): Promise<boolean> {
     console.log("Refresh status:", res.status);
 
     if (!res.ok) {
-        return false;
+        const error = await getApiError(res);
+        return error;
     }
 
-    return true;
+    return null;
 }

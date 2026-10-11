@@ -30,6 +30,7 @@ export default function CreateEquipmentPage() {
     const {
         register,
         handleSubmit,
+        setError,
         formState: { errors, isSubmitting }
     } = useForm<EquipmentForm>({
         resolver: zodResolver(equipmentSchema)
@@ -55,7 +56,18 @@ export default function CreateEquipmentPage() {
         }
 
         const error = await getApiError(res);
-        alert(error);
+
+        if (error.code === "VALIDATION_FAILED" && error.errors) {
+            Object.entries(error.errors).forEach(([field, messages]) => {
+                setError(field as keyof EquipmentForm, {
+                    type: "server",
+                    message: messages.join("\n")
+                });
+            });
+
+            return;
+        }
+        alert(error.message);
     }
 
     return (
@@ -102,6 +114,10 @@ export default function CreateEquipmentPage() {
                                 className={`${styles.input} ${errors.code ? styles.inputError : ""} `}
                             />
 
+                            <p className="whitespace-pre-line text-red-500">
+                                {errors.code?.message}
+                            </p>
+
                             {errors.code && (
                                 <p className={styles.error}>
                                     {errors.code.message}
@@ -121,6 +137,10 @@ export default function CreateEquipmentPage() {
                                 {...register("name")}
                                 className={`${styles.input} ${errors.name ? styles.inputError : ""} `}
                             />
+
+                            <p className="whitespace-pre-line text-red-500">
+                                {errors.name?.message}
+                            </p>
 
                             {errors.name && (
                                 <p className={styles.error}>
@@ -157,11 +177,9 @@ export default function CreateEquipmentPage() {
                                 </option>
                             </select>
 
-                            {errors.status && (
-                                <p className={styles.error}>
-                                    {errors.status.message}
-                                </p>
-                            )}
+                            <p className="whitespace-pre-line text-red-500">
+                                {errors.status?.message}
+                            </p>
                         </div>
 
                         <div className={styles.actions}>

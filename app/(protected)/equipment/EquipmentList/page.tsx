@@ -1,14 +1,14 @@
 'use client'
 
-import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
+import Link from "next/link";
+import { useState, useEffect } from "react";
+import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import SearchIcon from "@mui/icons-material/Search";
-import AddIcon from "@mui/icons-material/Add";
-import VisibilityIcon from "@mui/icons-material/Visibility";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
-import { apiFetch } from "../../../../services/api";
-import { useState, useEffect } from "react";
-import Link from "next/link";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import { apiFetch, getApiError } from "../../../../services/api";
+import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 import {
     Dialog,
     DialogTitle,
@@ -117,8 +117,20 @@ export default function EquipmentList() {
             setTimeout(() => {
                 setShowSuccess(false);
             }, 1500);
+
+            setIsDeleting(false);
+            return;
         }
 
+        const error = await getApiError(res);
+
+        if (error.code === "FORBIDDEN") {
+            alert("Bạn không có quyền thực hiện thao tác này.");
+            setIsDeleting(false);
+            return;
+        }
+
+        alert(error.message);
         setIsDeleting(false);
     }
 

@@ -9,11 +9,15 @@ export default function LoginPage() {
     const router = useRouter();
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
-    const [loading, setLoading] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [errorMessage, setErrorMessage] = useState("");
+    const [showSuccess, setShowSuccess] = useState(false);
 
     async function handleLogin() {
         try {
-            setLoading(true);
+            setErrorMessage("");
+            setIsSubmitting(true);
+
             const res = await apiFetch("/api/Auth/login", {
                 method: "POST",
                 headers: {
@@ -28,77 +32,118 @@ export default function LoginPage() {
 
             if (!res.ok) {
                 const error = await getApiError(res);
-                alert(error);
+
+                if (error.code === "VALIDATION_FAILED") {
+                    setErrorMessage("Vui lòng nhập đầy đủ thông tin");
+                    return;
+                }
+
+                if (error.code === "INVALID_CREDENTIALS") {
+                    setErrorMessage("Tên đăng nhập hoặc mật khẩu không đúng");
+                    return;
+                }
+
+                setErrorMessage(error.message);
                 return;
             }
 
             window.dispatchEvent(new Event("authChanged"));
 
-            router.push("/dashboard");
+            setShowSuccess(true);
+
+            setTimeout(() => {
+                router.push("/dashboard");
+            }, 1000);
+        } catch {
+            setErrorMessage("Không thể kết nối đến máy chủ. Vui lòng thử lại.");
         } finally {
-            setLoading(false);
+            setIsSubmitting(false);
         }
     }
 
     return (
-        <form
-            className={styles.page}
-            onSubmit={(e) => {
-                e.preventDefault();
-                handleLogin();
-            }}
-        >
-            <div className={styles.loginBox}>
-
-                <div className={styles.header}>
-                    <h1 className={styles.title}>
-                        Đăng nhập
-                    </h1>
-
-                    <p className={styles.subtitle}>
-                        Đăng nhập vào hệ thống quản lý thiết bị
-                    </p>
-                </div>
-
-                <div className={styles.form}>
-
-                    <div className={styles.inputGroup}>
-                        <label className={styles.label}>
-                            Tên tài khoản
-                        </label>
-
-                        <input
-                            type="text"
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value)}
-                            placeholder="Nhập tên tài khoản"
-                            className={styles.input}
-                        />
+        <>
+            {showSuccess && (
+                <div className={styles.successToast} role="status">
+                    <div className={styles.successIcon}>
+                        <i className="fa-solid fa-check"></i>
                     </div>
 
-                    <div className={styles.inputGroup}>
-                        <label className={styles.label}>
-                            Mật khẩu
-                        </label>
+                    <span>Đăng nhập thành công</span>
+                </div>
+            )}
 
-                        <input
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            placeholder="Nhập mật khẩu"
-                            className={styles.input}
-                        />
+            <form
+                className={styles.page}
+                onSubmit={(e) => {
+                    e.preventDefault();
+                    handleLogin();
+                }}
+            >
+                <div className={styles.loginBox}>
+
+                    <div className={styles.header}>
+                        <h1 className={styles.title}>
+                            Đăng nhập
+                        </h1>
+
+                        <p className={styles.subtitle}>
+                            Đăng nhập vào hệ thống quản lý thiết bị
+                        </p>
                     </div>
 
-                    <button
-                        type="submit"
-                        className={styles.button}
-                        disabled={loading}
-                    >
-                        {loading ? "Đang đăng nhập..." : "Đăng nhập"}
-                    </button>
+                    <div className={styles.form}>
+
+                        <div className={styles.inputGroup}>
+                            <label className={styles.label}>
+                                Tên tài khoản
+                            </label>
+
+                            <input
+                                type="text"
+                                value={username}
+                                onChange={(e) => {
+                                    setUsername(e.target.value)
+                                    setErrorMessage("")
+                                }}
+                                placeholder="Nhập tên tài khoản"
+                                className={styles.input}
+                            />
+                        </div>
+
+                        <div className={styles.inputGroup}>
+                            <label className={styles.label}>
+                                Mật khẩu
+                            </label>
+
+                            <input
+                                type="password"
+                                value={password}
+                                onChange={(e) => {
+                                    setPassword(e.target.value)
+                                    setErrorMessage("")
+                                }}
+                                placeholder="Nhập mật khẩu"
+                                className={styles.input}
+                            />
+
+                            {errorMessage && (
+                                <p className={styles.errorMessage}>
+                                    {errorMessage}
+                                </p>
+                            )}
+                        </div>
+
+                        <button
+                            type="submit"
+                            className={styles.button}
+                            disabled={isSubmitting}
+                        >
+                            {isSubmitting ? "Đang đăng nhập..." : "Đăng nhập"}
+                        </button>
+                    </div>
                 </div>
-            </div>
-        </form>
+            </form>
+        </>
     );
 }
