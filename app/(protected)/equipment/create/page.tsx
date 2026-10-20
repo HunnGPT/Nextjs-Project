@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { apiFetch, getApiError } from "../../../../services/api";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -19,24 +19,50 @@ const equipmentSchema = z.object({
         .max(200, "Tên thiết bị tối đa 200 ký tự"),
 
     status: z.string()
-        .min(1, "Trạng thái không được để trống")
+        .min(1, "Trạng thái không được để trống"),
+
+    categoryId: z.coerce.number()
+        .int("Danh mục không hợp lệ")
+        .positive("Vui lòng chọn danh mục")
 });
 
-type EquipmentForm = z.infer<typeof equipmentSchema>;
+type EquipmentForm = z.input<typeof equipmentSchema>;
+type EquipmentFormOutput = z.output<typeof equipmentSchema>;
+
+type Category = {
+    id: number;
+    name: string;
+};
 
 export default function CreateEquipmentPage() {
     const router = useRouter();
     const [showSuccess, setShowSuccess] = useState(false);
+    const [categories, setCategories] = useState<Category[]>([]);
     const {
         register,
         handleSubmit,
         setError,
         formState: { errors, isSubmitting }
-    } = useForm<EquipmentForm>({
+    } = useForm<EquipmentForm, any, EquipmentFormOutput>({
         resolver: zodResolver(equipmentSchema)
     });
 
-    async function onSubmit(data: EquipmentForm) {
+    useEffect(() => {
+        async function fetchCategories() {
+            const res = await apiFetch("/api/categories?pageNumber=1&pageSize=100");
+
+            if (!res.ok) {
+                return;
+            }
+
+            const data = await res.json();
+            setCategories(data.items);
+        }
+
+        fetchCategories();
+    }, []);
+
+    async function onSubmit(data: EquipmentFormOutput) {
         const res = await apiFetch("/api/equipments", {
             method: "POST",
             headers: {
@@ -145,6 +171,35 @@ export default function CreateEquipmentPage() {
                             {errors.name && (
                                 <p className={styles.error}>
                                     {errors.name.message}
+                                </p>
+                            )}
+                        </div>
+
+                        <div className={styles.formGroup}>
+                            <label className={styles.label}>
+                                Danh mục
+                                <span className={styles.required}>*</span>
+                            </label>
+
+                            <select
+                                {...register("categoryId")}
+                                defaultValue=""
+                                className={`${styles.input} ${errors.categoryId ? styles.inputError : ""}`}
+                            >
+                                <option value="" disabled>
+                                    Chọn danh mục
+                                </option>
+
+                                {categories.map((category) => (
+                                    <option key={category.id} value={category.id}>
+                                        {category.name}
+                                    </option>
+                                ))}
+                            </select>
+
+                            {errors.categoryId && (
+                                <p className={styles.error}>
+                                    {errors.categoryId.message}
                                 </p>
                             )}
                         </div>

@@ -1,7 +1,6 @@
 'use client'
 
 export default function Error({
-    error,
     reset
 }: {
     error: Error & { digest?: string };
@@ -33,7 +32,7 @@ export default function Error({
                     padding: "5px 10px",
                     cursor: "pointer"
                 }}
-                onClick={() => window.location.reload()}
+                onClick={() => reset()}
             >
                 Thử lại
             </button>

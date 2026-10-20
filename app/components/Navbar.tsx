@@ -12,20 +12,27 @@ export default function Navbar() {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
 
     async function handleAuthChange() {
-        const res = await apiFetch("/api/Auth/me", {
-            credentials: "include"
-        });
+        try {
+            const res = await apiFetch("/api/Auth/me", {
+                credentials: "include"
+            });
 
-        setIsLoggedIn(res.ok);
+            setIsLoggedIn(res.ok);
+        } catch {
+            setIsLoggedIn(false);
+        }
     }
 
     useEffect(() => {
-        handleAuthChange();
+        const onAuthChange = () => {
+            void handleAuthChange();
+        };
 
-        window.addEventListener("authChanged", handleAuthChange);
+        window.addEventListener("authChanged", onAuthChange);
+        onAuthChange();
 
         return () => {
-            window.removeEventListener("authChanged", handleAuthChange);
+            window.removeEventListener("authChanged", onAuthChange);
         };
     }, []);
 

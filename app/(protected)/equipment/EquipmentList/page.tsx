@@ -1,12 +1,13 @@
 'use client'
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import SearchIcon from "@mui/icons-material/Search";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import VisibilityIcon from "@mui/icons-material/Visibility";
+import { usePagedList } from "../../../hooks/usePagedList";
 import { apiFetch, getApiError } from "../../../../services/api";
 import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 import {
@@ -25,61 +26,54 @@ type Equipment = {
 };
 
 export default function EquipmentList() {
-    const [filteredEquipments, setFilteredEquipments] = useState<Equipment[]>([]);
-    const [equipmentList, setEquipmentList] = useState<Equipment[]>([]);
     const [selectedId, setSelectedId] = useState<number | null>(null);
     const [role, setRole] = useState<string | null>(null);
     const [openDelete, setOpenDelete] = useState(false);
-    const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
+    const [searchQuery, setSearchQuery] = useState("");
     const [showSuccess, setShowSuccess] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const query = useMemo(
+        () => ({ search: searchQuery }),
+        [searchQuery]
+    );
+    const {
+        items: equipmentList,
+        totalCount,
+        pageNumber,
+        pageSize,
+        isLoading: loading,
+        error,
+        setPagination,
+        goToFirstPage,
+        refetch,
+        goToPreviousPage
+    } = usePagedList<Equipment>({
+        endpoint: "/api/equipments",
+        query: query,
+        initialPageSize: 10
+    });
 
     useEffect(() => {
-        async function fetchEquipments() {
+        async function fetchRole() {
             try {
-                const meRes = await apiFetch("/api/Auth/me");
+                const res = await apiFetch("/api/Auth/me");
 
-                if (!meRes.ok) {
-                    setLoading(false);
-                    return;
+                if (res.ok) {
+                    const data = await res.json();
+                    setRole(data.role);
                 }
-
-                const meData = await meRes.json();
-                setRole(meData.role);
-
-                const equipmentRes = await apiFetch("/api/equipments");
-
-                if (!equipmentRes.ok) {
-                    setLoading(false);
-                    return;
-                }
-
-                const data = await equipmentRes.json();
-
-                setEquipmentList(data);
-                setFilteredEquipments(data);
-            } finally {
-                setLoading(false);
+            } catch {
+                setRole(null);
             }
         }
 
-        fetchEquipments();
+        fetchRole();
     }, []);
 
     function handleSearch() {
-        const keyword = search.trim().toLowerCase();
-
-        if (keyword === "") {
-            setFilteredEquipments(equipmentList);
-            return;
-        }
-
-        const result = equipmentList.filter(equipment =>
-            equipment.name.toLowerCase().includes(keyword)
-        );
-
-        setFilteredEquipments(result);
+        setSearchQuery(search.trim());
+        goToFirstPage();
     }
 
     function handleOpenDelete(id: number) {
@@ -102,13 +96,11 @@ export default function EquipmentList() {
         );
 
         if (res.ok) {
-            setEquipmentList(prev =>
-                prev.filter(equipment => equipment.id !== selectedId)
-            );
-
-            setFilteredEquipments(prev =>
-                prev.filter(equipment => equipment.id !== selectedId)
-            );
+            if (equipmentList.length === 1 && pageNumber > 1) {
+                goToPreviousPage();
+            } else {
+                refetch();
+            }
 
             setOpenDelete(false);
             setSelectedId(null);
@@ -146,9 +138,9 @@ export default function EquipmentList() {
         return styles.statusInactive;
     }
 
-    const rows = filteredEquipments.map((equipment, index) => ({
+    const rows = equipmentList.map((equipment, index) => ({
         ...equipment,
-        stt: index + 1
+        stt: (pageNumber - 1) * pageSize + index + 1
     }));
 
     const columns: GridColDef[] = [
@@ -311,18 +303,26 @@ export default function EquipmentList() {
                 ) : equipmentList.length === 0 ? (
                     <div className={styles.emptyState}>
                         <i className="fa-solid fa-box-open"></i>
-                        <p>Chưa có thiết bị nào.</p>
-                    </div>
-                ) : filteredEquipments.length === 0 ? (
-                    <div className={styles.emptyState}>
-                        <i className="fa-solid fa-magnifying-glass"></i>
-                        <p>Không tìm thấy thiết bị phù hợp.</p>
+                        <p>
+                            {searchQuery
+                                ? "Không tìm thấy thiết bị phù hợp."
+                                : "Chưa có thiết bị nào."}
+                        </p>
                     </div>
                 ) : (
                     <DataGrid
                         rows={rows}
                         columns={columns}
                         pageSizeOptions={[5, 10, 25, 100]}
+                        paginationMode="server"
+                        rowCount={totalCount}
+                        paginationModel={{
+                            page: pageNumber - 1,
+                            pageSize: pageSize
+                        }}
+                        onPaginationModelChange={(model) => {
+                            setPagination(model.page + 1, model.pageSize);
+                        }}
                         disableRowSelectionOnClick
                         disableColumnMenu
                         rowHeight={58}

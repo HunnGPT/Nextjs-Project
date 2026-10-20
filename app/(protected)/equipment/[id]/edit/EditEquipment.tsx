@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { apiFetch } from "../../../../../services/api";
 import styles from "./EditEquipment.module.css";
@@ -10,6 +10,12 @@ type Equipment = {
     code: string;
     name: string;
     status: string;
+    categoryId: number;
+};
+
+type Category = {
+    id: number;
+    name: string;
 };
 
 export default function EditEquipment({ equipment }: { equipment: Equipment }) {
@@ -18,18 +24,37 @@ export default function EditEquipment({ equipment }: { equipment: Equipment }) {
     const [form, setForm] = useState({
         code: equipment.code,
         name: equipment.name,
-        status: equipment.status
+        status: equipment.status,
+        categoryId: equipment.categoryId
     });
 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
+    const [categories, setCategories] = useState<Category[]>([]);
+
+    useEffect(() => {
+        async function fetchCategories() {
+            const res = await apiFetch(
+                "/api/categories?pageNumber=1&pageSize=100"
+            );
+
+            if (!res.ok) return;
+
+            const data = await res.json();
+            setCategories(data.items);
+        }
+
+        fetchCategories();
+    }, []);
 
     function handleChange(
         e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
     ) {
+        const { name, value } = e.target;
+
         setForm({
             ...form,
-            [e.target.name]: e.target.value
+            [name]: name === "categoryId" ? Number(value) : value
         });
     }
 
@@ -60,7 +85,11 @@ export default function EditEquipment({ equipment }: { equipment: Equipment }) {
         }
 
         setIsSubmitting(false);
-        alert("Cập nhật thiết bị thất bại");
+
+        const error = await res.text();
+        console.error("Update equipment failed:", res.status, error);
+
+        alert(`Cập nhật thất bại (${res.status}): ${error}`);
     }
 
     return (
@@ -130,6 +159,27 @@ export default function EditEquipment({ equipment }: { equipment: Equipment }) {
 
                         <div className={styles.formGroup}>
                             <label className={styles.label}>
+                                Danh mục
+                                <span className={styles.required}>*</span>
+                            </label>
+
+                            <select
+                                name="categoryId"
+                                value={form.categoryId}
+                                onChange={handleChange}
+                                className={styles.input}
+                                disabled={isSubmitting || showSuccess}
+                            >
+                                {categories.map((category) => (
+                                    <option key={category.id} value={category.id}>
+                                        {category.name}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div className={styles.formGroup}>
+                            <label className={styles.label}>
                                 Trạng thái
                                 <span className={styles.required}>*</span>
                             </label>
@@ -169,8 +219,8 @@ export default function EditEquipment({ equipment }: { equipment: Equipment }) {
                                 type="submit"
                                 disabled={isSubmitting || showSuccess}
                                 className={`${styles.saveButton} ${isSubmitting || showSuccess
-                                        ? styles.disabledButton
-                                        : ""
+                                    ? styles.disabledButton
+                                    : ""
                                     }`}
                             >
                                 {isSubmitting || showSuccess
