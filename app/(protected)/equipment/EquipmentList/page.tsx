@@ -334,7 +334,7 @@ export default function EquipmentList() {
                     loading={loading}
                     slots={{
                         noRowsOverlay: () => (
-                            <div className={styles.emptyState}>
+                            <div className={styles.noRowsOverlay}>
                                 {searchQuery
                                     ? "Không tìm thấy thiết bị phù hợp."
                                     : "Chưa có thiết bị nào."}
