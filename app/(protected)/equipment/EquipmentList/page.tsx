@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import SearchIcon from "@mui/icons-material/Search";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import { DataGrid, GridColDef, type GridSortModel } from "@mui/x-data-grid";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import { usePagedList } from "../../../hooks/usePagedList";
 import { apiFetch, getApiError } from "../../../../services/api";
@@ -33,10 +33,7 @@ export default function EquipmentList() {
     const [searchQuery, setSearchQuery] = useState("");
     const [showSuccess, setShowSuccess] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
-    const query = useMemo(
-        () => ({ search: searchQuery }),
-        [searchQuery]
-    );
+    const query = { search: searchQuery };
     const {
         items: equipmentList,
         totalCount,
@@ -117,15 +114,15 @@ export default function EquipmentList() {
             return;
         }
 
-        const error = await getApiError(res);
+        const deleteError = await getApiError(res);
 
-        if (error.code === "FORBIDDEN") {
+        if (deleteError.code === "FORBIDDEN") {
             alert("Bạn không có quyền thực hiện thao tác này.");
             setIsDeleting(false);
             return;
         }
 
-        alert(error.message);
+        alert(deleteError.message);
         setIsDeleting(false);
     }
 
@@ -145,6 +142,17 @@ export default function EquipmentList() {
         ...equipment,
         stt: (pageNumber - 1) * pageSize + index + 1
     }));
+
+    // Object cấp cho DataGrid phải có identity ổn định: mỗi render tạo object mới khiến grid phát lại onPaginationModelChange.
+    const gridPaginationModel = useMemo(
+        () => ({ page: pageNumber - 1, pageSize }),
+        [pageNumber, pageSize]
+    );
+
+    const gridSortModel = useMemo<GridSortModel>(
+        () => [{ field: sortBy, sort: descending ? "desc" : "asc" }],
+        [sortBy, descending]
+    );
 
     const columns: GridColDef[] = [
         {
@@ -299,40 +307,43 @@ export default function EquipmentList() {
             </div>
 
             <div className={styles.grid}>
-                {loading ? (
+                {error ? (
                     <div className={styles.emptyState}>
-                        <p>Đang tải thiết bị...</p>
-                    </div>
-                ) : equipmentList.length === 0 ? (
-                    <div className={styles.emptyState}>
-                        <i className="fa-solid fa-box-open"></i>
-                        <p>
-                            {searchQuery
-                                ? "Không tìm thấy thiết bị phù hợp."
-                                : "Chưa có thiết bị nào."}
-                        </p>
+                        <i className="fa-solid fa-triangle-exclamation"></i>
+                        <p>{error}</p>
+                        <button
+                            className={styles.searchButton}
+                            onClick={refetch}
+                        >
+                            Thử lại
+                        </button>
                     </div>
                 ) : (
                     <DataGrid
                         rows={rows}
                         columns={columns}
+                        loading={loading}
                         pageSizeOptions={[5, 10, 25, 100]}
                         paginationMode="server"
                         sortingMode="server"
                         rowCount={totalCount}
-                        paginationModel={{
-                            page: pageNumber - 1,
-                            pageSize: pageSize
+                        slots={{
+                            noRowsOverlay: () => (
+                                <div className={styles.emptyState}>
+                                    <i className="fa-solid fa-box-open"></i>
+                                    <p>
+                                        {searchQuery
+                                            ? "Không tìm thấy thiết bị phù hợp."
+                                            : "Chưa có thiết bị nào."}
+                                    </p>
+                                </div>
+                            )
                         }}
+                        paginationModel={gridPaginationModel}
                         onPaginationModelChange={(model) => {
                             setPagination(model.page + 1, model.pageSize);
                         }}
-                        sortModel={[
-                            {
-                                field: sortBy,
-                                sort: descending ? "desc" : "asc"
-                            }
-                        ]}
+                        sortModel={gridSortModel}
                         onSortModelChange={(model) => {
                             const item = model[0];
 
