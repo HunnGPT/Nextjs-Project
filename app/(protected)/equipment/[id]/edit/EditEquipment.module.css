@@ -198,6 +198,58 @@ select.input:disabled {
     font-weight: 700;
 }
 
+.errorToast {
+    position: fixed;
+    top: 25px;
+    left: 50%;
+    z-index: 9999;
+
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    max-width: calc(100vw - 32px);
+    padding: 12px 20px;
+
+    box-sizing: border-box;
+
+    background-color: #ffffff;
+    border-radius: 8px;
+
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+
+    color: #374151;
+    font-size: 15px;
+    font-weight: 500;
+
+    white-space: nowrap;
+
+    transform: translateX(-50%);
+
+    animation:
+        toastShow 0.3s ease-out,
+        toastHide 0.3s ease-in 2.2s forwards;
+}
+
+.errorIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    width: 24px;
+    height: 24px;
+
+    border-radius: 50%;
+
+    background-color: #ef4444;
+    color: #ffffff;
+
+    font-size: 15px;
+    font-weight: 700;
+}
+
 @keyframes toastShow {
     from {
         opacity: 0;
@@ -250,6 +302,11 @@ select.input:disabled {
     }
 
     .successToast {
+        top: 16px;
+        white-space: normal;
+    }
+
+    .errorToast {
         top: 16px;
         white-space: normal;
     }

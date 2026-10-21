@@ -51,22 +51,66 @@ export type ApiErrorResponse = {
     errors?: Record<string, string[]>;
 };
 
+
 export async function getApiError(
     res: Response
 ): Promise<ApiErrorResponse> {
-    const contentType = res.headers.get("content-type") ?? "";
-
-    if (contentType.includes("application/json")) {
-        return await res.json() as ApiErrorResponse;
-    }
-
-    return {
+    const fallback: ApiErrorResponse = {
         code: "UNEXPECTED_ERROR",
-        message: (await res.text()) || "Đã xảy ra lỗi",
+        message: "Đã xảy ra lỗi. Vui lòng thử lại.",
         traceId: "",
         timestamp: new Date().toISOString()
     };
+
+    try {
+        const body = await res.text();
+
+        if (!body) {
+            return fallback;
+        }
+
+        const contentType = res.headers.get("content-type") ?? "";
+
+        if (contentType.includes("application/json")) {
+            const data: unknown = JSON.parse(body);
+
+            if (
+                typeof data !== "object" ||
+                data === null ||
+                !("code" in data) ||
+                typeof data.code !== "string" ||
+                !data.code.trim() ||
+                !("message" in data) ||
+                typeof data.message !== "string" ||
+                !data.message.trim()
+            ) {
+                return fallback;
+            }
+
+            return {
+                code: data.code,
+                message: data.message,
+                traceId:
+                    "traceId" in data && typeof data.traceId === "string"
+                        ? data.traceId
+                        : "",
+                timestamp:
+                    "timestamp" in data &&
+                        typeof data.timestamp === "string"
+                        ? data.timestamp
+                        : new Date().toISOString()
+            };
+        }
+
+        return {
+            ...fallback,
+            message: body
+        };
+    } catch {
+        return fallback;
+    }
 }
+
 
 async function refreshAccessToken(): Promise<ApiErrorResponse | null> {
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/Auth/refresh`, {

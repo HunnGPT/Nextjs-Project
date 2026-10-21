@@ -6,6 +6,8 @@ type UsePagedListOptions = {
     endpoint: string;
     query?: PagedQuery;
     initialPageSize?: number;
+    sortBy?: string;
+    descending?: boolean;
 };
 
 type UsePagedListReturn<T> = {
@@ -16,16 +18,21 @@ type UsePagedListReturn<T> = {
     pageSize: number;
     isLoading: boolean;
     error: string | null;
+    sortBy: string;
+    descending: boolean;
     setPagination: (pageNumber: number, pageSize: number) => void;
     goToFirstPage: () => void;
     refetch: () => void;
     goToPreviousPage: () => void;
+    setSorting: (sortBy: string, descending: boolean) => void;
 };
 
 export function usePagedList<T>({
     endpoint,
     query = {},
-    initialPageSize = 10
+    initialPageSize = 10,
+    sortBy: initialSortBy = "name",
+    descending: initialDescending = false
 }: UsePagedListOptions): UsePagedListReturn<T> {
     const [result, setResult] = useState<PagedResult<T> | null>(null);
     const [pageNumber, setPageNumber] = useState(1);
@@ -33,6 +40,8 @@ export function usePagedList<T>({
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [reloadToken, setReloadToken] = useState(0);
+    const [sortBy, setSortBy] = useState(initialSortBy);
+    const [descending, setDescending] = useState(initialDescending);
 
     const setPagination = useCallback(
         (nextPageNumber: number, nextPageSize: number) => {
@@ -59,6 +68,12 @@ export function usePagedList<T>({
         setReloadToken(prev => prev + 1);
     }, []);
 
+    const setSorting = useCallback((nextSortBy: string, nextDescending: boolean) => {
+        setSortBy(nextSortBy);
+        setDescending(nextDescending);
+        setPageNumber(1);
+    }, []);
+
     useEffect(() => {
         const controller = new AbortController();
         let ignore = false;
@@ -71,7 +86,9 @@ export function usePagedList<T>({
                 const queryString = toQueryString({
                     ...query,
                     pageNumber,
-                    pageSize
+                    pageSize,
+                    sortBy,
+                    descending
                 });
 
                 const res = await apiFetch(
@@ -111,7 +128,15 @@ export function usePagedList<T>({
             ignore = true;
             controller.abort();
         };
-    }, [endpoint, query, pageNumber, pageSize, reloadToken]);
+    }, [
+        endpoint,
+        query,
+        pageNumber,
+        pageSize,
+        sortBy,
+        descending,
+        reloadToken
+    ]);
 
     return {
         items: result?.items ?? [],
@@ -121,6 +146,9 @@ export function usePagedList<T>({
         pageSize,
         isLoading,
         error,
+        sortBy,
+        descending,
+        setSorting,
         setPagination,
         goToFirstPage,
         refetch,

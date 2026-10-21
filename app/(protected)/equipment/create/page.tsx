@@ -43,7 +43,7 @@ export default function CreateEquipmentPage() {
         handleSubmit,
         setError,
         formState: { errors, isSubmitting }
-    } = useForm<EquipmentForm, any, EquipmentFormOutput>({
+    } = useForm<EquipmentForm, undefined, EquipmentFormOutput>({
         resolver: zodResolver(equipmentSchema)
     });
 
@@ -140,10 +140,6 @@ export default function CreateEquipmentPage() {
                                 className={`${styles.input} ${errors.code ? styles.inputError : ""} `}
                             />
 
-                            <p className="whitespace-pre-line text-red-500">
-                                {errors.code?.message}
-                            </p>
-
                             {errors.code && (
                                 <p className={styles.error}>
                                     {errors.code.message}
@@ -163,10 +159,6 @@ export default function CreateEquipmentPage() {
                                 {...register("name")}
                                 className={`${styles.input} ${errors.name ? styles.inputError : ""} `}
                             />
-
-                            <p className="whitespace-pre-line text-red-500">
-                                {errors.name?.message}
-                            </p>
 
                             {errors.name && (
                                 <p className={styles.error}>
@@ -232,9 +224,11 @@ export default function CreateEquipmentPage() {
                                 </option>
                             </select>
 
-                            <p className="whitespace-pre-line text-red-500">
-                                {errors.status?.message}
-                            </p>
+                            {errors.status && (
+                                <p className={styles.error}>
+                                    {errors.status.message}
+                                </p>
+                            )}
                         </div>
 
                         <div className={styles.actions}>

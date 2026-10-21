@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { apiFetch } from "../../../../../services/api";
+import { apiFetch, getApiError } from "../../../../../services/api";
 import styles from "./EditEquipment.module.css";
 
 type Equipment = {
@@ -30,6 +30,7 @@ export default function EditEquipment({ equipment }: { equipment: Equipment }) {
 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [categories, setCategories] = useState<Category[]>([]);
 
     useEffect(() => {
@@ -58,42 +59,70 @@ export default function EditEquipment({ equipment }: { equipment: Equipment }) {
         });
     }
 
+
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
 
+        setErrorMessage(null);
         setIsSubmitting(true);
 
-        const res = await apiFetch(
-            `/api/equipments/${equipment.id}`,
-            {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(form)
-            }
-        );
+        try {
+            const res = await apiFetch(
+                `/api/equipments/${equipment.id}`,
+                {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(form)
+                }
+            );
 
-        if (res.ok) {
+            if (!res.ok) {
+                const error = await getApiError(res);
+
+                setErrorMessage(error.message);
+
+                console.error("Update equipment failed:", res.status, error);
+
+                setTimeout(() => {
+                    setErrorMessage(null);
+                }, 3000);
+
+                return;
+            }
+
             setShowSuccess(true);
 
             setTimeout(() => {
                 router.push("/equipment");
             }, 1000);
+        } catch (error) {
+            console.error("Update equipment failed:", error);
 
-            return;
+            setErrorMessage("Không thể kết nối đến máy chủ. Vui lòng thử lại.");
+
+            setTimeout(() => {
+                setErrorMessage(null);
+            }, 3000);
+        } finally {
+            setIsSubmitting(false);
         }
-
-        setIsSubmitting(false);
-
-        const error = await res.text();
-        console.error("Update equipment failed:", res.status, error);
-
-        alert(`Cập nhật thất bại (${res.status}): ${error}`);
     }
+
 
     return (
         <>
+            {errorMessage && (
+                <div className={styles.errorToast}>
+                    <div className={styles.errorIcon}>
+                        <i className="fa-solid fa-circle-exclamation"></i>
+                    </div>
+
+                    <span>{errorMessage}</span>
+                </div>
+            )}
+
             {showSuccess && (
                 <div className={styles.successToast}>
                     <div className={styles.successIcon}>

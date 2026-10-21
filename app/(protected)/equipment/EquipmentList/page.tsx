@@ -47,7 +47,10 @@ export default function EquipmentList() {
         setPagination,
         goToFirstPage,
         refetch,
-        goToPreviousPage
+        goToPreviousPage,
+        sortBy,
+        descending,
+        setSorting
     } = usePagedList<Equipment>({
         endpoint: "/api/equipments",
         query: query,
@@ -315,6 +318,7 @@ export default function EquipmentList() {
                         columns={columns}
                         pageSizeOptions={[5, 10, 25, 100]}
                         paginationMode="server"
+                        sortingMode="server"
                         rowCount={totalCount}
                         paginationModel={{
                             page: pageNumber - 1,
@@ -322,6 +326,22 @@ export default function EquipmentList() {
                         }}
                         onPaginationModelChange={(model) => {
                             setPagination(model.page + 1, model.pageSize);
+                        }}
+                        sortModel={[
+                            {
+                                field: sortBy,
+                                sort: descending ? "desc" : "asc"
+                            }
+                        ]}
+                        onSortModelChange={(model) => {
+                            const item = model[0];
+
+                            if (!item || !item.sort) {
+                                setSorting("name", false);
+                                return;
+                            }
+
+                            setSorting(item.field, item.sort === "desc");
                         }}
                         disableRowSelectionOnClick
                         disableColumnMenu
