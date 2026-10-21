@@ -74,6 +74,15 @@ export function usePagedList<T>({
         setPageNumber(1);
     }, []);
 
+    // Dependency là chuỗi đã serialize: so sánh theo giá trị, caller không cần bọc query trong useMemo.
+    const queryString = toQueryString({
+        ...query,
+        pageNumber,
+        pageSize,
+        sortBy,
+        descending
+    });
+
     useEffect(() => {
         const controller = new AbortController();
         let ignore = false;
@@ -83,14 +92,6 @@ export function usePagedList<T>({
             setError(null);
 
             try {
-                const queryString = toQueryString({
-                    ...query,
-                    pageNumber,
-                    pageSize,
-                    sortBy,
-                    descending
-                });
-
                 const res = await apiFetch(
                     `${endpoint}${queryString}`,
                     { signal: controller.signal }
@@ -128,15 +129,7 @@ export function usePagedList<T>({
             ignore = true;
             controller.abort();
         };
-    }, [
-        endpoint,
-        query,
-        pageNumber,
-        pageSize,
-        sortBy,
-        descending,
-        reloadToken
-    ]);
+    }, [endpoint, queryString, reloadToken]);
 
     return {
         items: result?.items ?? [],
