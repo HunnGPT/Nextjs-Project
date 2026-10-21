@@ -74,6 +74,14 @@ export function usePagedList<T>({
         setPageNumber(1);
     }, []);
 
+    const queryString = toQueryString({
+        ...query,
+        pageNumber,
+        pageSize,
+        sortBy,
+        descending
+    });
+
     useEffect(() => {
         const controller = new AbortController();
         let ignore = false;
@@ -83,14 +91,6 @@ export function usePagedList<T>({
             setError(null);
 
             try {
-                const queryString = toQueryString({
-                    ...query,
-                    pageNumber,
-                    pageSize,
-                    sortBy,
-                    descending
-                });
-
                 const res = await apiFetch(
                     `${endpoint}${queryString}`,
                     { signal: controller.signal }
@@ -130,11 +130,7 @@ export function usePagedList<T>({
         };
     }, [
         endpoint,
-        query,
-        pageNumber,
-        pageSize,
-        sortBy,
-        descending,
+        queryString,
         reloadToken
     ]);
 

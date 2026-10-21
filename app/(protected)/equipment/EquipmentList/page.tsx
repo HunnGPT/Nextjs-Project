@@ -117,15 +117,15 @@ export default function EquipmentList() {
             return;
         }
 
-        const error = await getApiError(res);
+        const deleteError = await getApiError(res);
 
-        if (error.code === "FORBIDDEN") {
+        if (deleteError.code === "FORBIDDEN") {
             alert("Bạn không có quyền thực hiện thao tác này.");
             setIsDeleting(false);
             return;
         }
 
-        alert(error.message);
+        alert(deleteError.message);
         setIsDeleting(false);
     }
 
@@ -235,6 +235,26 @@ export default function EquipmentList() {
         });
     }
 
+
+    const paginationModel = useMemo(
+        () => ({
+            page: pageNumber - 1,
+            pageSize
+        }),
+        [pageNumber, pageSize]
+    );
+
+    const sortModel = useMemo(
+        () => [
+            {
+                field: sortBy,
+                sort: descending ? "desc" as const : "asc" as const
+            }
+        ],
+        [sortBy, descending]
+    );
+
+
     return (
         <div className={styles.page}>
 
@@ -299,82 +319,78 @@ export default function EquipmentList() {
             </div>
 
             <div className={styles.grid}>
-                {loading ? (
+                {error && (
                     <div className={styles.emptyState}>
-                        <p>Đang tải thiết bị...</p>
+                        <p>{error}</p>
+                        <button onClick={refetch}>
+                            Thử lại
+                        </button>
                     </div>
-                ) : equipmentList.length === 0 ? (
-                    <div className={styles.emptyState}>
-                        <i className="fa-solid fa-box-open"></i>
-                        <p>
-                            {searchQuery
-                                ? "Không tìm thấy thiết bị phù hợp."
-                                : "Chưa có thiết bị nào."}
-                        </p>
-                    </div>
-                ) : (
-                    <DataGrid
-                        rows={rows}
-                        columns={columns}
-                        pageSizeOptions={[5, 10, 25, 100]}
-                        paginationMode="server"
-                        sortingMode="server"
-                        rowCount={totalCount}
-                        paginationModel={{
-                            page: pageNumber - 1,
-                            pageSize: pageSize
-                        }}
-                        onPaginationModelChange={(model) => {
-                            setPagination(model.page + 1, model.pageSize);
-                        }}
-                        sortModel={[
-                            {
-                                field: sortBy,
-                                sort: descending ? "desc" : "asc"
-                            }
-                        ]}
-                        onSortModelChange={(model) => {
-                            const item = model[0];
-
-                            if (!item || !item.sort) {
-                                setSorting("name", false);
-                                return;
-                            }
-
-                            setSorting(item.field, item.sort === "desc");
-                        }}
-                        disableRowSelectionOnClick
-                        disableColumnMenu
-                        rowHeight={58}
-                        autoHeight
-                        sx={{
-                            border: "1px solid #e5e7eb",
-                            borderRadius: "8px",
-
-                            "& .MuiDataGrid-columnHeaders": {
-                                backgroundColor: "#f8fafc",
-                                borderBottom: "1px solid #e5e7eb"
-                            },
-
-                            "& .MuiDataGrid-columnHeaderTitle": {
-                                fontWeight: 700,
-                                color: "#374151"
-                            },
-
-                            "& .MuiDataGrid-cell": {
-                                borderBottom: "1px solid #f1f5f9"
-                            },
-
-                            "& .MuiDataGrid-row:hover": {
-                                backgroundColor: "#f8fafc"
-                            },
-
-                            "& .MuiDataGrid-footerContainer": {
-                                borderTop: "1px solid #e5e7eb"
-                            }
-                        }}
-                    />
                 )}
+
+                <DataGrid
+                    rows={rows}
+                    columns={columns}
+                    loading={loading}
+                    slots={{
+                        noRowsOverlay: () => (
+                            <div className={styles.emptyState}>
+                                {searchQuery
+                                    ? "Không tìm thấy thiết bị phù hợp."
+                                    : "Chưa có thiết bị nào."}
+                            </div>
+                        )
+                    }}
+                    pageSizeOptions={[5, 10, 25, 100]}
+                    paginationMode="server"
+                    sortingMode="server"
+                    rowCount={totalCount}
+                    paginationModel={paginationModel}
+                    onPaginationModelChange={(model) => {
+                        setPagination(model.page + 1, model.pageSize);
+                    }}
+                    sortModel={sortModel}
+                    onSortModelChange={(model) => {
+                        const item = model[0];
+
+                        if (!item || !item.sort) {
+                            setSorting("name", false);
+                            return;
+                        }
+
+                        setSorting(item.field, item.sort === "desc");
+                    }}
+                    disableRowSelectionOnClick
+                    disableColumnMenu
+                    rowHeight={58}
+                    autoHeight
+                    sx={{
+                        border: "1px solid #e5e7eb",
+                        borderRadius: "8px",
+
+                        "& .MuiDataGrid-columnHeaders": {
+                            backgroundColor: "#f8fafc",
+                            borderBottom: "1px solid #e5e7eb"
+                        },
+
+                        "& .MuiDataGrid-columnHeaderTitle": {
+                            fontWeight: 700,
+                            color: "#374151"
+                        },
+
+                        "& .MuiDataGrid-cell": {
+                            borderBottom: "1px solid #f1f5f9"
+                        },
+
+                        "& .MuiDataGrid-row:hover": {
+                            backgroundColor: "#f8fafc"
+                        },
+
+                        "& .MuiDataGrid-footerContainer": {
+                            borderTop: "1px solid #e5e7eb"
+                        }
+                    }}
+                />
             </div>
 
             <Dialog
